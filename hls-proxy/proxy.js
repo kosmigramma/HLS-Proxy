@@ -89,7 +89,7 @@ const proxy = function({server, host, port, is_secure, req_headers, req_options,
     {has_cache, get_time_since_last_access, is_expired, prefetch_segment, get_segment, add_listener} = require('./segment_cache')({should_prefetch_url, debug, debug_level, request, get_request_options, max_segments, cache_timeout, cache_key})
   )}
 
-  const modify_m3u8_content = function(m3u8_content, m3u8_url, referer_url) {
+  const modify_m3u8_content = function(m3u8_content, m3u8_url, referer_url, req) {
     const base_urls = {
       "relative": m3u8_url.replace(/[\?#].*$/, '').replace(/[^\/]+$/, ''),
       "absolute": m3u8_url.replace(/(:\/\/[^\/]+).*$/, '$1')
@@ -434,7 +434,7 @@ const proxy = function({server, host, port, is_secure, req_headers, req_options,
       }
       else {
         res.writeHead(200, { "Content-Type": "application/x-mpegURL" })
-        res.end( modify_m3u8_content(response, url, referer_url) )
+        res.end( modify_m3u8_content(response, url, referer_url, req) )
       }
     })
     .catch((e) => {
