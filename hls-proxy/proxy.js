@@ -277,7 +277,7 @@ const proxy = function({server, host, port, is_secure, req_headers, req_options,
         matching_url += `|${referer_url}`
 
       let ts_file_ext    = get_ts_file_ext(file_name, file_ext)
-      let redirected_url = `${ is_secure ? 'https' : 'http' }://${host}:${port}/${ base64_encode(matching_url) }${ts_file_ext || file_ext || ''}`
+      let redirected_url = `//${host + (port !== 80 ? `:${port}` : '')}/${ base64_encode(matching_url) }${ts_file_ext || file_ext || ''}`
       debug(3, 'redirecting (proxied):', redirected_url)
 
       return `${head}${redirected_url}${tail}`
@@ -426,7 +426,7 @@ const proxy = function({server, host, port, is_secure, req_headers, req_options,
     debug(1, 'proxying:', url)
     debug(3, 'm3u8:', (is_m3u8 ? 'true' : 'false'))
 
-    request(options, '', {binary: !is_m3u8, stream: !is_m3u8})
+    request(options, '', {binary: !is_m3u8, stream: !is_m3u8, followRedirect: false})
     .then(({response}) => {
       if (!is_m3u8) {
         response.pipe(res)
@@ -437,9 +437,23 @@ const proxy = function({server, host, port, is_secure, req_headers, req_options,
       }
     })
     .catch((e) => {
-      debug(0, 'ERROR:', e.message)
-      res.writeHead(500)
-      res.end()
+      if(e.statusCode === 302) {
+        let redirPath = e.location;
+        try {
+          new URL(redirPath);
+        } catch {
+          const basePath = (new URL(url)).origin;
+          redirPath = basePath + e.location;
+        }
+        res.writeHead(302, {
+          location: "/" + base64_encode(redirPath)
+        });
+        res.end()
+      } else {
+        debug(0, 'ERROR:', e.message)
+        res.writeHead(500)
+        res.end()
+      }
     })
   })
 }

@@ -1,0 +1,6 @@
+hls-proxy:
+  ports:
+      - "80:80"
+  build: .
+  volumes:
+    - ./:/app
