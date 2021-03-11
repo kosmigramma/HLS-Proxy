@@ -435,7 +435,8 @@ const proxy = function({server, host, port, is_secure, req_headers, req_options,
       }
       else {
         res.writeHead(200, { "Content-Type": "application/x-mpegURL" })
-        res.end( modify_m3u8_content(response, url, referer_url, req) )
+        res.write( modify_m3u8_content(response, url, referer_url, req) );
+        res.end();
       }
     })
     .catch((e) => {
