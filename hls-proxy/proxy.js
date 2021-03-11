@@ -278,7 +278,8 @@ const proxy = function({server, host, port, is_secure, req_headers, req_options,
 
       let ts_file_ext    = get_ts_file_ext(file_name, file_ext)
       let proxyHost = req.headers["x-forwarded-host"] || req.headers.host;
-      let redirected_url = `//${proxyHost + (port !== 80 ? `:${port}` : '')}/${ base64_encode(matching_url) }${ts_file_ext || file_ext || ''}`
+      let proxyProto = req.headers["x-forwarded-proto"] || (is_secure ? "https" : "http");
+      let redirected_url = `${proxyProto}://${proxyHost + (port !== 80 ? `:${port}` : '')}/${ base64_encode(matching_url) }${ts_file_ext || file_ext || ''}`
       debug(3, 'redirecting (proxied):', redirected_url)
 
       return `${head}${redirected_url}${tail}`
