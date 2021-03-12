@@ -404,6 +404,12 @@ const proxy = function({server, host, port, is_secure, req_headers, req_options,
       }
     })()
 
+    if(!url) {
+      res.writeHead(404)
+      res.end()
+      return;
+    }
+
     const is_m3u8 = regexs.m3u8.test(url)
 
     const send_ts = function(segment) {
