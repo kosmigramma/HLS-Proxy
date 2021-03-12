@@ -276,11 +276,14 @@ const proxy = function({server, host, port, is_secure, req_headers, req_options,
       if (referer_url)
         matching_url += `|${referer_url}`
 
+      let redirected_url = matching_url;
       let ts_file_ext    = get_ts_file_ext(file_name, file_ext)
-      let proxyHost = req.headers["x-forwarded-host"] || req.headers.host;
-      let proxyProto = req.headers["x-forwarded-proto"] || (is_secure ? "https" : "http");
-      let redirected_url = `${proxyProto}://${proxyHost + (port !== 80 ? `:${port}` : '')}/${ base64_encode(matching_url) }${ts_file_ext || file_ext || ''}`
-      debug(3, 'redirecting (proxied):', redirected_url)
+      if(!ts_file_ext || referer_url) {
+        let proxyHost = req.headers["x-forwarded-host"] || req.headers.host;
+        let proxyProto = req.headers["x-forwarded-proto"] || (is_secure ? "https" : "http");
+        redirected_url = `${proxyProto}://${proxyHost + (port !== 80 ? `:${port}` : '')}/${ base64_encode(matching_url) }${ts_file_ext || file_ext || ''}`
+        debug(3, 'redirecting (proxied):', redirected_url)
+      }
 
       return `${head}${redirected_url}${tail}`
     })
@@ -449,7 +452,7 @@ const proxy = function({server, host, port, is_secure, req_headers, req_options,
       }
       else {
         res.writeHead(200, { "Content-Type": "application/x-mpegURL" })
-        res.write( referer_url ? modify_m3u8_content(response, url, referer_url, req) : response );
+        res.write( modify_m3u8_content(response, url, referer_url, req) );
         res.end();
       }
     })
