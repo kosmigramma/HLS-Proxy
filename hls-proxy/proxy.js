@@ -412,6 +412,14 @@ const proxy = function({server, host, port, is_secure, req_headers, req_options,
 
     const is_m3u8 = regexs.m3u8.test(url)
 
+    if(!is_m3u8 && !referer_url) {
+      res.writeHead(302, {
+        location: url
+      });
+      res.end()
+      return;
+    }
+
     const send_ts = function(segment) {
       res.writeHead(200, { "Content-Type": "video/MP2T" })
       res.end(segment)
