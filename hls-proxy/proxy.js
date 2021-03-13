@@ -275,7 +275,7 @@ const proxy = function({server, host, port, is_secure, req_headers, req_options,
 
       if (referer_url)
         matching_url += `|${referer_url}`
-
+      file_ext = file_ext.split("?")[0];
       let redirected_url = matching_url;
       let ts_file_ext    = get_ts_file_ext(file_name, file_ext)
       if(!ts_file_ext || referer_url) {
@@ -466,7 +466,7 @@ const proxy = function({server, host, port, is_secure, req_headers, req_options,
           redirPath = basePath + e.location;
         }
         res.writeHead(302, {
-          location: "/" + base64_encode(redirPath)
+          location: "/" + base64_encode(redirPath) + (is_m3u8 ? ".m3u8" : "")
         });
         res.end()
       } else {
