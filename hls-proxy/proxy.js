@@ -1,4 +1,7 @@
 const request   = require('@warren-bank/node-request').request
+const NodeCache = require( "node-cache" );
+const cache = new NodeCache( { stdTTL: 5, checkperiod: 120 } );
+
 const parse_url = require('url').parse
 
 // btoa
@@ -441,9 +444,20 @@ const proxy = function({server, host, port, is_secure, req_headers, req_options,
       }
     }
 
+    if(is_m3u8) {
+        const cached_response = cache.get(url);
+        if(cached_response) {
+          res.writeHead(200, { "Content-Type": "application/x-mpegURL" })
+          res.write(cached_response);
+          res.end();
+          return;
+        }
+    }
+
     const options = get_request_options(url, referer_url)
     debug(1, 'proxying:', url)
     debug(3, 'm3u8:', (is_m3u8 ? 'true' : 'false'))
+
 
     request(options, '', {binary: !is_m3u8, stream: !is_m3u8, followRedirect: false})
     .then(({response}) => {
@@ -451,8 +465,10 @@ const proxy = function({server, host, port, is_secure, req_headers, req_options,
         response.pipe(res)
       }
       else {
+        const m3u8_content = modify_m3u8_content(response, url, referer_url, req);
+        cache.set(url, m3u8_content);
         res.writeHead(200, { "Content-Type": "application/x-mpegURL" })
-        res.write( modify_m3u8_content(response, url, referer_url, req) );
+        res.write(m3u8_content);
         res.end();
       }
     })
